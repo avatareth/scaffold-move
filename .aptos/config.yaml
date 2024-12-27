@@ -1,7 +1,0 @@
----
-profiles:
-  movement_acct_1:
-    private_key: "0xb749d81019c13091a30226f6d6055d20bea0eba88bfaaf6b9a2130c1652c81e8"
-    public_key: "0xc631b71d86254cef77344a8e44a89c09467fce1bd982e714cc9ff226adfd8b42"
-    account: 6e7c05076c385337c5ea2dc522c7f147bb6ad7f60c16d68f6777bde658d12126
-    rest_url: "https://aptos.testnet.porto.movementlabs.xyz/v1"
