@@ -1,45 +1,9 @@
 import { useEffect, useState } from "react";
 import { NextPage } from "next";
-// import { type } from "os";
-import ReactMarkdown from "react-markdown";
-
-//定义一个新的数据类型来记录后端返回的数据
-export type resultByDataset = {
-  dataset_id: string;
-  results: search_result[];
-};
-//定义一个数据类型来记录每个搜索结果
-export type search_result = {
-  id: string;
-  data: string;
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  metadata: {};
-};
 
 
 const ETHSpace: NextPage = () => {
-  //在对后端发起请求后，将response的内容保存在results中
-  //如果用户选择使用mixed模式，则使用resultByDataset来记录结果
-  const [projects, setProjects] = useState([]);
   const [filtedProjects, setFiltedProjects] = useState([]);
-  //从后端获取数据集列表
-  // useEffect(() => {
-  //   fetchOptions();
-  //   // console.log(data);
-  // });
-  // const fetchOptions = async () => {
-  //   // const response = await fetch("https://faas.movespace.xyz/api/v1/run?name=VectorAPI&func_name=get_cluster", {
-  //   //   method: "POST",
-  //   //   headers:{
-  //   //     'Content-Type':'application/json;charset=utf-8',
-  //   //   },
-  //   //   body:JSON.stringify({
-  //   //     "params": ["ai-based-smart-contract-explorer"]
-  //   //   })
-  //   // });
-  //   // const data=await response.json();
-  // };
-  //获取search prompt与dataset名字后向后端发request
   const init = async () => {
     const queryParameters = new URLSearchParams(window.location.search);
     const tag = queryParameters.get("tag");
@@ -51,8 +15,7 @@ const ETHSpace: NextPage = () => {
       // mode: "no-cors",
     });
     const data = await response.json();
-    console.log("data:" + JSON.stringify(data));
-    setProjects(data);
+    console.log(`data: ${JSON.stringify(data)}`);
     setFiltedProjects(data);
     if (tag == "bodhi") {
       const filtedProj = data.filter(elem => elem.if_bodhi == true);

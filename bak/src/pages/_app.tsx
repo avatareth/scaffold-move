@@ -9,9 +9,6 @@ import { Footer } from "../components/Footer";
 import type { AppProps } from "next/app";
 import { useMemo, useState } from "react";
 import {
-  FewchaWalletAdapter,
-  PontemWalletAdapter,
-  MartianWalletAdapter,
   WalletProvider,
   AptosWalletAdapter,
 } from "@manahippo/aptos-wallet-adapter";
@@ -25,9 +22,7 @@ function WalletSelector({ Component, pageProps }: AppProps) {
   const wallets = useMemo(
     () => [
       new AptosWalletAdapter(),
-      new MartianWalletAdapter(),
-      new PontemWalletAdapter(),
-      new FewchaWalletAdapter(),
+      // new NightlyWalletAdapter(),
     ],
     []
   );

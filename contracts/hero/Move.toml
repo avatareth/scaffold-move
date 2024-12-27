@@ -7,12 +7,12 @@ hero = "_"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"
-rev = "mainnet"
+rev = "release-v.1.14"
 subdir = "aptos-move/framework/aptos-framework"
 
 [dependencies.AptosTokenObjects]
 git = "https://github.com/aptos-labs/aptos-core.git"
-rev = "mainnet"
+rev = "release-v.1.14"
 subdir = "aptos-move/framework/aptos-token-objects"
 
 [dev-dependencies]
