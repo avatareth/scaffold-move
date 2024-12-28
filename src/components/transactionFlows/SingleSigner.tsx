@@ -55,7 +55,6 @@ export function SingleSigner() {
     //     functionArguments: [account.address, 1], // 1 is in Octas
     //   },
     // };
-    console.log("transaction", transaction);
     console.log("network", network);
     const aptosConfig = new AptosConfig({
       network: Network.CUSTOM,

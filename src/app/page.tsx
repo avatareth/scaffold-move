@@ -33,7 +33,7 @@ import {
 import { init as initTelegram } from "@telegram-apps/sdk";
 import { AlertCircle } from "lucide-react";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 // Imports for registering a browser extension wallet plugin on page load
 // import { MyWallet } from "@/utils/standardWallet";
@@ -83,9 +83,10 @@ export default function Home() {
 
   useEffect(() => {
     if (connected) {
-      const nightly = window.nightly?.aptos;
-      const nightlyAdapter = nightly?.standardWallet as AptosWallet;
-      setAdapter(nightlyAdapter);
+      const nightly = window.nightly?.aptos as AptosWallet;
+      // const nightlyAdapter = nightly?.standardWallet as AptosWallet;
+      console.log("nightlyAdapter", nightly);
+      setAdapter(nightly);
 
       const aptosConfig = new AptosConfig({
         network: Network.CUSTOM,
@@ -96,25 +97,25 @@ export default function Home() {
   }, [connected]);
 
   // Example usage within your component:
-  const handleTransaction = async () => {
+  const handleTransaction = useCallback(async () => {
     // TODO: get the adapter.
     // Docs: https://docs.nightly.app/docs/aptos/solana/connect
     console.log("info", account, adapter, aptos);
-    // if (!account?.address || !adapter || !aptos) return;
+    if (!account?.address || !adapter || !aptos) return;
     
-    // const transaction = await buildSimpleTransaction(
-    //   aptos,
-    //   account.address,
-    //   "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
-    //   100
-    // );
+    const transaction = await buildSimpleTransaction(
+      aptos,
+      account.address,
+      "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
+      100
+    );
 
-    // const signedTx = await adapter.features[
-    //   "aptos:signTransaction"
-    // ].signTransaction(transaction);
+    const signedTx = await adapter.features[
+      "aptos:signTransaction"
+    ].signTransaction(transaction);
 
-    // console.log("signedTx", signedTx);
-  };
+    console.log("signedTx", signedTx);
+  }, [account, adapter, aptos]);
 
 
 
