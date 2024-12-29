@@ -1,6 +1,8 @@
 # Scaffold-Move
 
- 🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Move Chians. It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts. And...We are going to add AI Abilities for Move dApp Scaffold, to generate code automatically.
+ 🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Move Chains. 
+ 
+It's designed to make it easier for developers to create and deploy smart contracts and build user interfaces that interact with those contracts. And...We are going to add AI Abilities for Move dApp Scaffold, to generate code automatically.
 
 To `git checkout` for diff chains:
 
