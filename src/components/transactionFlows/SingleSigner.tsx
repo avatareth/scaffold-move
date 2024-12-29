@@ -162,7 +162,7 @@ export function SingleSigner() {
         <CardTitle>Msg Operations</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-wrap gap-4">
-        <Button onClick={onSignAndSubmitTransaction} disabled={!sendable}>
+        {/* <Button onClick={onSignAndSubmitTransaction} disabled={!sendable}>
           Sign and submit transaction
         </Button>
         <Button onClick={onSignAndSubmitBCSTransaction} disabled={!sendable}>
@@ -173,7 +173,7 @@ export function SingleSigner() {
         </Button>
         <Button onClick={onSignTransactionV2} disabled={!sendable}>
           Sign transaction V2
-        </Button>
+        </Button> */}
         <Button onClick={onSignMessage} disabled={!sendable}>
           Sign message
         </Button>
