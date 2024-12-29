@@ -14,7 +14,7 @@ See example that buidl based on Scaffold-Aptos(check the branches):
 
 > Aptos:
 > 
-> https://github.com/NonceGeek/scaffold-aptos-examples
+> https://github.com/rootmud/scaffold-move-examples
 
 This project is referenced from:
 
