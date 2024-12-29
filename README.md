@@ -28,5 +28,6 @@ This project is referenced from:
 4. Environment configuration, some global variables are in .env.local, which will be injected into the process started by yarn by default. Attention beginners, the testnet faucet url provided by aptos official website cannot be used directly.
 5. `yarn dev`
 6.`yarn build #compiled next.js application`
+7. A Quick way to deploy: `yarn vercel --prod`
 
 This project is maintained by [NonceGeek DAO](https://noncegeek.com/#/).
