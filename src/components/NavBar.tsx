@@ -14,9 +14,9 @@ export function NavBar() {
         <ul className="menu menu-horizontal flex items-center gap-2">
           <NavItem href="/" title="Home" /> |
           <NavItem href="/example_ui" title="UI" /> |
-          <NavItem href="/scaffold_examples" title="Examples" /> |
-          <NavItem href="/snippets" title="Snippets" /> |
+          <NavItem href="/examples" title="Examples" /> |
           <li className="font-sans font-semibold text-base flex gap-2">
+            <a href="http://cheatsheet.rootmud.xyz/" target="_blank" rel="noreferrer">Snippets</a> |
             <a href="https://assistant.aptosfoundation.org/" target="_blank" rel="noreferrer">AI Assistant</a> |
             <a href={MODULE_URL} target="_blank" rel="noreferrer">Contract on Explorer</a>
           </li>

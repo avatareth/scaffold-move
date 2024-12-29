@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 // import { WalletSelector as ShadcnWalletSelector } from "@/components/WalletSelector";
 // import { MultiAgent } from "@/components/transactionFlows/MultiAgent";
 import { SingleSigner } from "@/components/transactionFlows/SingleSigner";
+import { useToast } from "@/components/ui/use-toast";
 // import { Sponsor } from "@/components/transactionFlows/Sponsor";
 // import { TransactionParameters } from "@/components/transactionFlows/TransactionParameters";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -58,6 +59,19 @@ if (isTelegramMiniApp) {
   initTelegram();
 }
 
+async function doGetBalance(
+  aptos: Aptos,
+  accountAddress: string) {
+  const [balance] = await aptos.view({
+    payload: {
+    function: "0x1::coin::balance",
+      typeArguments: ["0x1::aptos_coin::AptosCoin"],
+      functionArguments: [accountAddress],
+      }
+    })
+  return balance;
+}
+
 async function buildSimpleTransaction(
   aptos: Aptos,
   senderAddress: string,
@@ -75,6 +89,8 @@ async function buildSimpleTransaction(
 }
 
 export default function Home() {
+  const { toast } = useToast();
+
   const { account, connected, network, wallet, changeNetwork } = useWallet();
   
   // Move these inside useEffect to only run after connection
@@ -96,13 +112,21 @@ export default function Home() {
     }
   }, [connected]);
 
+  const getBalance = useCallback(async () => {
+    if (!account?.address || !adapter || !aptos) return;
+    const balance = await doGetBalance(aptos, account.address);
+    toast({
+      title: "balance",
+      description: balance!.toString(),
+    });
+  }, [aptos, account]);
+
   // Example usage within your component:
   const handleTransaction = useCallback(async () => {
-    // TODO: get the adapter.
     // Docs: https://docs.nightly.app/docs/aptos/solana/connect
     console.log("info", account, adapter, aptos);
     if (!account?.address || !adapter || !aptos) return;
-    
+
     const transaction = await buildSimpleTransaction(
       aptos,
       account.address,
@@ -114,7 +138,10 @@ export default function Home() {
       "aptos:signTransaction"
     ].signTransaction(transaction);
 
-    console.log("signedTx", signedTx);
+    toast({
+      title: signedTx.status,
+      description: "This transaction has been " + signedTx.status,
+    });
   }, [account, adapter, aptos]);
 
 
@@ -129,11 +156,18 @@ export default function Home() {
       {connected && (
         <>
           <button 
+            onClick={getBalance}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            // disabled={!connected || !adapter || !aptos}
+          >
+            View Example: Get Balance
+          </button>
+          <button 
             onClick={handleTransaction}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             // disabled={!connected || !adapter || !aptos}
           >
-            Send Transaction
+            Send Transaction Example: Transfer
           </button>
           <WalletConnection
             account={account}

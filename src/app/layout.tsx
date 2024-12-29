@@ -17,9 +17,9 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: "Aptos Wallet Adapter Example",
+  title: "Scaffold-Move",
   description:
-    "An example of how to use Aptos Wallet Adapter with React and Next.js.",
+    "🧪 An open-source, up-to-date toolkit for building decentralized applications (dapps) on the Move Chains.",
 };
 
 export default function RootLayout({ children }: PropsWithChildren) {

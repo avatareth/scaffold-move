@@ -24,7 +24,7 @@ export function SingleSigner() {
 
   const onSignMessageAndVerify = async () => {
     const payload = {
-      message: "Hello from Aptos Wallet Adapter",
+      message: "Hello from Movement Wallet Adapter",
       nonce: Math.random().toString(16),
     };
     const response = await signMessageAndVerify(payload);
@@ -36,7 +36,7 @@ export function SingleSigner() {
 
   const onSignMessage = async () => {
     const payload = {
-      message: "Hello from Aptos Wallet Adapter",
+      message: "Hello from Movement Wallet Adapter",
       nonce: Math.random().toString(16),
     };
     const response = await signMessage(payload);
