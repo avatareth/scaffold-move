@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NextPage } from "next";
-
+import "../app/globals.css";
 
 const Examples: NextPage = () => {
   const [filtedProjects, setFiltedProjects] = useState([]);
