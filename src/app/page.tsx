@@ -44,6 +44,14 @@ import { NavBar } from "@/components/NavBar";
 
 import { AptosWallet } from '@aptos-labs/wallet-standard';
 
+// Add this interface declaration at the top of the file, after the imports
+declare global {
+  interface Window {
+    nightly?: {
+      aptos: AptosWallet;
+    };
+  }
+}
 
 // Example of how to register a browser extension wallet plugin.
 // Browser extension wallets should call registerWallet once on page load.

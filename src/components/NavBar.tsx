@@ -18,7 +18,7 @@ export function NavBar() {
           <li className="font-sans font-semibold text-base flex gap-2">
             <a href="http://cheatsheet.rootmud.xyz/" target="_blank" rel="noreferrer">Snippets</a> |
             <a href="https://assistant.aptosfoundation.org/" target="_blank" rel="noreferrer">AI Assistant</a> |
-            <a href={MODULE_URL} target="_blank" rel="noreferrer">Contract on Explorer</a>
+            <a href="https://github.com/noncegeek/scaffold-move" target="_blank" rel="noreferrer">Source Code</a>
           </li>
         </ul>
       </div>

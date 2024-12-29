@@ -2,8 +2,22 @@ import { useEffect, useState } from "react";
 import { NextPage } from "next";
 import "../app/globals.css";
 
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  url: string;
+  github: string;
+  tags: string[];
+  if_bodhi: boolean;
+  if_gpt: boolean;
+  author: {
+    twitter: string;
+  };
+}
+
 const Examples: NextPage = () => {
-  const [filtedProjects, setFiltedProjects] = useState([]);
+  const [filtedProjects, setFiltedProjects] = useState<Project[]>([]);
   const init = async () => {
     const queryParameters = new URLSearchParams(window.location.search);
     const tag = queryParameters.get("tag");
@@ -18,12 +32,12 @@ const Examples: NextPage = () => {
     console.log(`data: ${JSON.stringify(data)}`);
     setFiltedProjects(data);
     if (tag == "bodhi") {
-      const filtedProj = data.filter(elem => elem.if_bodhi == true);
+      const filtedProj = data.filter((elem: Project) => elem.if_bodhi == true);
       console.log(filtedProj);
       setFiltedProjects(filtedProj);
     }
     if (tag == "gpt") {
-      const filtedProj = data.filter(elem => elem.if_gpt == true);
+      const filtedProj = data.filter((elem: Project) => elem.if_gpt == true);
       console.log(filtedProj);
       setFiltedProjects(filtedProj);
     }
