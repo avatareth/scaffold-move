@@ -142,14 +142,19 @@ export default function Home() {
       100
     );
 
+    console.log("transaction", transaction);
+
     const signedTx = await adapter.features[
       "aptos:signTransaction"
     ].signTransaction(transaction);
+
+    // TODO: adapt with OKX and petra here.
 
     toast({
       title: signedTx.status,
       description: "This transaction has been " + signedTx.status,
     });
+
   }, [account, adapter, aptos]);
 
 
@@ -202,7 +207,7 @@ export default function Home() {
           </a>
         </div>
       </div> */}
-      {connected && isMainnet(connected, network?.name) && (
+      {/* {connected && isMainnet(connected, network?.name) && (
         <Alert variant="warning">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Warning</AlertTitle>
@@ -210,7 +215,7 @@ export default function Home() {
             The transactions flows below will not work on the Mainnet network.
           </AlertDescription>
         </Alert>
-      )}
+      )} */}
       {connected && (
         <>
           

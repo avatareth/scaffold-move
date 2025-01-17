@@ -174,10 +174,10 @@ export function SingleSigner() {
         <Button onClick={onSignTransactionV2} disabled={!sendable}>
           Sign transaction V2
         </Button> */}
-        <Button onClick={onSignMessage} disabled={!sendable}>
+        <Button onClick={onSignMessage} >
           Sign message
         </Button>
-        <Button onClick={onSignMessageAndVerify} disabled={!sendable}>
+        <Button onClick={onSignMessageAndVerify} >
           Sign message and verify
         </Button>
       </CardContent>
