@@ -22,12 +22,12 @@ export const WalletProvider = ({ children }: PropsWithChildren) => {
   const claimSecretKey = useClaimSecretKey();
 
   const wallets = [
-    new BitgetWallet(),
-    new FewchaWallet(),
-    new MartianWallet(),
-    new MSafeWalletAdapter(),
-    new PontemWallet(),
-    new TrustWallet(),
+    // new BitgetWallet(),
+    // new FewchaWallet(),
+    // new MartianWallet(),
+    // new MSafeWalletAdapter(),
+    // new PontemWallet(),
+    // new TrustWallet(),
     new OKXWallet(),
   ];
 
@@ -45,11 +45,12 @@ export const WalletProvider = ({ children }: PropsWithChildren) => {
           claimSecretKey,
           dappId: "57fa42a9-29c6-4f1e-939c-4eefa36d9ff5",
         },
-        mizuwallet: {
-          manifestURL:
-            "https://assets.mz.xyz/static/config/mizuwallet-connect-manifest.json",
-        },
+        // mizuwallet: {
+        //   manifestURL:
+        //     "https://assets.mz.xyz/static/config/mizuwallet-connect-manifest.json",
+        // },
       }}
+      optInWallets={["Nightly", "Petra"]}
       onError={(error) => {
         toast({
           variant: "destructive",
