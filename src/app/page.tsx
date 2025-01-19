@@ -42,7 +42,7 @@ import { useState, useEffect, useCallback } from "react";
 
 import { NavBar } from "@/components/NavBar";
 
-import { AptosWallet } from '@aptos-labs/wallet-standard';
+import { AptosWallet } from "@aptos-labs/wallet-standard";
 
 // Add this interface declaration at the top of the file, after the imports
 declare global {
@@ -62,21 +62,21 @@ declare global {
 //   registerWallet(myWallet);
 // })();
 
-const isTelegramMiniApp = typeof window !== 'undefined' && (window as any).TelegramWebviewProxy !== undefined;
+const isTelegramMiniApp =
+  typeof window !== "undefined" &&
+  (window as any).TelegramWebviewProxy !== undefined;
 if (isTelegramMiniApp) {
   initTelegram();
 }
 
-async function doGetBalance(
-  aptos: Aptos,
-  accountAddress: string) {
+async function doGetBalance(aptos: Aptos, accountAddress: string) {
   const [balance] = await aptos.view({
     payload: {
-    function: "0x1::coin::balance",
+      function: "0x1::coin::balance",
       typeArguments: ["0x1::aptos_coin::AptosCoin"],
       functionArguments: [accountAddress],
-      }
-    })
+    },
+  });
   return balance;
 }
 
@@ -99,8 +99,15 @@ async function buildSimpleTransaction(
 export default function Home() {
   const { toast } = useToast();
 
-  const { account, connected, network, wallet, changeNetwork } = useWallet();
-  
+  const {
+    account,
+    connected,
+    network,
+    wallet,
+    changeNetwork,
+    signAndSubmitTransaction,
+  } = useWallet();
+
   // Move these inside useEffect to only run after connection
   const [adapter, setAdapter] = useState<AptosWallet | null>(null);
   const [aptos, setAptos] = useState<Aptos | null>(null);
@@ -113,7 +120,7 @@ export default function Home() {
       setAdapter(nightly);
 
       const aptosConfig = new AptosConfig({
-        network: Network.CUSTOM,
+        network: Network.TESTNET,
         fullnode: "https://aptos.testnet.porto.movementlabs.xyz/v1",
       });
       setAptos(new Aptos(aptosConfig));
@@ -133,20 +140,40 @@ export default function Home() {
   const handleTransaction = useCallback(async () => {
     // Docs: https://docs.nightly.app/docs/aptos/solana/connect
     console.log("info", account, adapter, aptos);
-    if (!account?.address || !adapter || !aptos) return;
+    if (!account?.address) return;
+    const aptosConfig = new AptosConfig({
+      network: network?.name || Network.MAINNET,
+    });
+    const aptosClient = new Aptos(aptosConfig);
+    const signedTx = await signAndSubmitTransaction({
+      sender: account.address,
+      data: {
+        function: "0x1::coin::transfer",
+        typeArguments: ["0x1::aptos_coin::AptosCoin"],
+        functionArguments: [
+          "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
+          100,
+        ],
+      },
+    });
+    try {
+      await aptosClient.waitForTransaction({ transactionHash: signedTx.hash });
+    } catch (error) {
+      console.error(error);
+    }
 
-    const transaction = await buildSimpleTransaction(
-      aptos,
-      account.address,
-      "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
-      100
-    );
+    // const transaction = await buildSimpleTransaction(
+    //   aptos,
+    //   account.address,
+    //   "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
+    //   100
+    // );
 
-    console.log("transaction", transaction);
+    // console.log("transaction", transaction);
 
-    const signedTx = await adapter.features[
-      "aptos:signTransaction"
-    ].signTransaction(transaction);
+    // const signedTx = await adapter.features[
+    //   "aptos:signTransaction"
+    // ].signTransaction(transaction);
 
     // TODO: adapt with OKX and petra here.
 
@@ -154,10 +181,7 @@ export default function Home() {
       title: signedTx.status,
       description: "This transaction has been " + signedTx.status,
     });
-
-  }, [account, adapter, aptos]);
-
-
+  }, [account]);
 
   return (
     <main className="flex flex-col w-full max-w-[1000px] p-6 pb-12 md:px-8 gap-6">
@@ -168,14 +192,14 @@ export default function Home() {
       </div>
       {connected && (
         <>
-          <button 
+          <button
             onClick={getBalance}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             // disabled={!connected || !adapter || !aptos}
           >
             View Example: Get Balance
           </button>
-          <button 
+          <button
             onClick={handleTransaction}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             // disabled={!connected || !adapter || !aptos}
@@ -218,7 +242,6 @@ export default function Home() {
       )} */}
       {connected && (
         <>
-          
           <SingleSigner />
           {/* <TransactionParameters />
           <Sponsor />
@@ -299,7 +322,6 @@ function WalletConnection({
 
   return (
     <Card>
-      
       <CardHeader>
         <CardTitle>Wallet Connection</CardTitle>
       </CardHeader>
@@ -450,6 +472,5 @@ function WalletConnection({
         </div> */}
       </CardContent>
     </Card>
-    
   );
 }
