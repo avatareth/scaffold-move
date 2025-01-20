@@ -168,9 +168,13 @@ export default function Home() {
     // console.log("info", account, adapter, aptos);
     if (!account?.address) return;
     const network = await adapter?.network();
-    // if (network?.chainId !== 177) {
-    //   await adapter?.changeNetwork({ name: Network.TESTNET, chainId: 177 });
-    // }
+    if (network?.chainId !== 177) {
+      try {
+        await adapter?.changeNetwork({ name: Network.TESTNET, chainId: 177 });
+      } catch (error) {
+        console.error("Failed to change network:", error);
+      }
+    }
     const aptosConfig = new AptosConfig({
       network: network?.name || Network.TESTNET,
     });
