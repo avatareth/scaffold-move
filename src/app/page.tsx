@@ -20,7 +20,7 @@ import {
 // s
 // import { Switch } from "@/components/ui/switch";
 // import { isMainnet } from "@/utils";
-import { Aptos, Network, AptosConfig } from "@aptos-labs/ts-sdk";
+import { Aptos, Network, AptosConfig, InputGenerateTransactionPayloadData } from "@aptos-labs/ts-sdk";
 // import { WalletSelector as AntdWalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
 // import { WalletConnector as MuiWalletSelector } from "@aptos-labs/wallet-adapter-mui-design";
 import {
@@ -42,9 +42,10 @@ import { useState, useEffect, useCallback } from "react";
 
 import { NavBar } from "@/components/NavBar";
 
-import { AptosWallet } from "@aptos-labs/wallet-standard";
+import { AptosWallet, UserResponseStatus } from "@aptos-labs/wallet-standard";
 
 import { WalletButton } from "@/components/wallet/WalletButton";
+import { useAptosWallet } from "@razorlabs/wallet-kit";
 
 // Add this interface declaration at the top of the file, after the imports
 declare global {
@@ -101,25 +102,28 @@ async function buildSimpleTransaction(
 export default function Home() {
   const { toast } = useToast();
 
-  const {
-    account,
-    connected,
-    network,
-    wallet,
-    changeNetwork,
-    signAndSubmitTransaction,
-  } = useWallet();
+  // const {
+  //   account,
+  //   connected,
+  //   network,
+  //   wallet,
+  //   changeNetwork,
+  //   signAndSubmitTransaction,
+  // } = useWallet();
+  const { connected, disconnect, account, signAndSubmitTransaction, adapter } =
+    useAptosWallet();
 
   // Move these inside useEffect to only run after connection
-  const [adapter, setAdapter] = useState<AptosWallet | null>(null);
+  // const [adapter, setAdapter] = useState<AptosWallet | null>(null);
   const [aptos, setAptos] = useState<Aptos | null>(null);
+  const [networkInfo, setNetworkInfo] = useState<NetworkInfo | null>(null);
 
   useEffect(() => {
     if (connected) {
-      const nightly = window.nightly?.aptos as AptosWallet;
-      // const nightlyAdapter = nightly?.standardWallet as AptosWallet;
-      console.log("nightlyAdapter", nightly);
-      setAdapter(nightly);
+      // const nightly = window.nightly?.aptos as AptosWallet;
+      // // const nightlyAdapter = nightly?.standardWallet as AptosWallet;
+      // console.log("nightlyAdapter", nightly);
+      // setAdapter(nightly);
 
       const aptosConfig = new AptosConfig({
         network: Network.TESTNET,
@@ -128,6 +132,21 @@ export default function Home() {
       setAptos(new Aptos(aptosConfig));
     }
   }, [connected]);
+
+  useEffect(() => {
+    const getNetwork = async () => {
+      if (adapter?.network) {
+        const network = await adapter.network();
+        setNetworkInfo({
+          name: network.name,
+          chainId: network.chainId.toString(),
+          url: network.url,
+        });
+      }
+    };
+
+    getNetwork();
+  }, [adapter]);
 
   const getBalance = useCallback(async () => {
     if (!account?.address || !adapter || !aptos) return;
@@ -143,23 +162,32 @@ export default function Home() {
     // Docs: https://docs.nightly.app/docs/aptos/solana/connect
     console.log("info", account, adapter, aptos);
     if (!account?.address) return;
+    const network = await adapter?.network();
     const aptosConfig = new AptosConfig({
       network: network?.name || Network.MAINNET,
     });
     const aptosClient = new Aptos(aptosConfig);
-    const signedTx = await signAndSubmitTransaction({
-      sender: account.address,
-      data: {
-        function: "0x1::coin::transfer",
-        typeArguments: ["0x1::aptos_coin::AptosCoin"],
-        functionArguments: [
-          "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
-          100,
-        ],
-      },
+    const transaction: InputGenerateTransactionPayloadData = {
+      function: "0x1::coin::transfer",
+      typeArguments: ["0x1::aptos_coin::AptosCoin"],
+      functionArguments: [
+        "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
+        100,
+      ],
+    };
+
+    const userResponse = await signAndSubmitTransaction({
+      payload: transaction,
     });
+
+    if (userResponse.status !== UserResponseStatus.APPROVED) {
+      throw new Error(userResponse.status);
+    }
+    // Confirm withdraw in backend
+    const hash = (userResponse as unknown as { args: { hash: string } })
+      .args.hash;
     try {
-      await aptosClient.waitForTransaction({ transactionHash: signedTx.hash });
+      await aptosClient.waitForTransaction({ transactionHash: hash });
     } catch (error) {
       console.error(error);
     }
@@ -180,8 +208,8 @@ export default function Home() {
     // TODO: adapt with OKX and petra here.
 
     toast({
-      title: signedTx.status,
-      description: "This transaction has been " + signedTx.status,
+      title: userResponse.status,
+      description: "This transaction has been " + userResponse.status,
     });
   }, [account]);
 
@@ -209,10 +237,22 @@ export default function Home() {
             Send Transaction Example: Transfer
           </button>
           <WalletConnection
-            account={account}
-            network={network}
-            wallet={wallet}
-            changeNetwork={changeNetwork}
+            account={
+              {
+                address: account?.address || "",
+                publicKey: account?.publicKey || "",
+                minKeysRequired: undefined,
+                ansName: undefined,
+              } as AccountInfo
+            }
+            network={networkInfo}
+            wallet={
+              {
+                name: adapter?.name || "",
+                icon: adapter?.icon || "",
+                url: "",
+              } as WalletInfo
+            }
           />
         </>
       )}
@@ -258,17 +298,15 @@ interface WalletConnectionProps {
   account: AccountInfo | null;
   network: NetworkInfo | null;
   wallet: WalletInfo | null;
-  changeNetwork: (network: Network) => Promise<AptosChangeNetworkOutput>;
 }
 
 function WalletConnection({
   account,
   network,
   wallet,
-  changeNetwork,
 }: WalletConnectionProps) {
   const isValidNetworkName = () => {
-    if (isAptosNetwork(network)) {
+    if (network && isAptosNetwork(network)) {
       return Object.values<string | undefined>(Network).includes(network?.name);
     }
     // If the configured network is not an Aptos network, i.e is a custom network

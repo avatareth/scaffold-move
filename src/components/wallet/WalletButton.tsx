@@ -1,6 +1,7 @@
 "use client";
 
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { useAptosWallet } from "@razorlabs/wallet-kit";
 import { useState } from "react";
 import { WalletDialog } from "./WalletDialog";
 import { ConnectedWalletButton } from "./ConnectedWalletButton";
@@ -8,8 +9,10 @@ import { Button } from "../ui/button";
 
 export function WalletButton() {
   const [showDialog, setShowDialog] = useState(false);
-  const { connected } = useWallet();
-
+  const { connected, account } = useAptosWallet();
+  console.log("account: ", account);
+  console.log("connected: ", connected);
+  
   return (
     <WalletDialog
       open={showDialog}

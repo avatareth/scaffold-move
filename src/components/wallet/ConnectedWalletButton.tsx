@@ -1,6 +1,6 @@
 "use client";
 
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+// import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -9,9 +9,10 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { useCallback } from "react";
+import { useAptosWallet } from '@razorlabs/wallet-kit';
 
 export function ConnectedWalletButton() {
-  const { account, disconnect, wallet } = useWallet();
+  const { account, disconnect } = useAptosWallet();
 
   const handleDisconnect = useCallback(async () => {
     try {
