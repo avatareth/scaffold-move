@@ -1,4 +1,4 @@
-import { aptosClient, isSendableNetwork } from "@/utils";
+import { aptosClient, isSendableNetwork } from "@/lib/utils";
 import {
   Account,
   AccountAuthenticator,

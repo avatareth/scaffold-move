@@ -92,7 +92,7 @@ export function WalletDialog(props: WalletDialogProps) {
       <DialogPortal>
         <DialogOverlay className="bg-black/30 backdrop-blur-sm">
           <DialogContent className="sm:max-w-[425px] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-2xl">
-            <DialogTitle className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
+            <DialogTitle className="text-2xl font-bold text-center mb-6 bg-blue-500 bg-clip-text text-transparent">
               Connect Wallet
             </DialogTitle>
 
