@@ -46,16 +46,21 @@ const WalletItem = (props: WalletItemProps) => {
       onClick={() => {
         props.onSelect?.(wallet);
       }}
-      className="flex h-[100px] w-full cursor-pointer items-center justify-between rounded-[20px] bg-[#F6F5F1] px-[30px] py-[20px] transition-all hover:bg-[#ECEAE3]"
+      className="flex h-[80px] w-full cursor-pointer items-center justify-between rounded-xl bg-white/50 backdrop-blur-sm px-6 py-4 transition-all hover:bg-white/80 hover:shadow-md border border-gray-100 hover:border-purple-200"
     >
-      <Image
-        src={icon}
-        alt={wallet.name}
-        width={40}
-        height={40}
-        className="rounded-xl"
-      />
-      <span className="font-medium">{wallet.label ?? wallet.name}</span>
+      <div className="flex items-center gap-4">
+        <Image
+          src={icon}
+          alt={wallet.name}
+          width={36}
+          height={36}
+          className="rounded-lg"
+        />
+        <span className="font-medium text-gray-800">{wallet.label ?? wallet.name}</span>
+      </div>
+      <div className="text-purple-500">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      </div>
     </div>
   );
 };
@@ -85,14 +90,14 @@ export function WalletDialog(props: WalletDialogProps) {
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogTrigger asChild>{props.children}</DialogTrigger>
       <DialogPortal>
-        <DialogOverlay>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogTitle className="text-xl font-semibold text-center mb-4">
+        <DialogOverlay className="bg-black/30 backdrop-blur-sm">
+          <DialogContent className="sm:max-w-[425px] bg-white/90 backdrop-blur-sm border border-gray-200 shadow-2xl">
+            <DialogTitle className="text-2xl font-bold text-center mb-6 bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
               Connect Wallet
             </DialogTitle>
 
             {isMainnet && (
-              <Alert variant="warning" className="mb-4">
+              <Alert variant="warning" className="mb-6 border-amber-200 bg-amber-50">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Warning</AlertTitle>
                 <AlertDescription>
@@ -101,7 +106,7 @@ export function WalletDialog(props: WalletDialogProps) {
               </Alert>
             )}
 
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               {configuredWallets.map((wallet) => (
                 <WalletItem
                   key={wallet.name}
