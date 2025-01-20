@@ -274,7 +274,10 @@ export function WalletDialog(props: WalletDialogProps) {
         }
         setView("connecting");
         await select(wallet.name);
-        const accountInfo = (await wallet.adapter.connect()) as any;
+        const accountInfo = (await wallet.adapter.connect(undefined, {
+          chainId: 177,
+          name: Network.TESTNET,
+        })) as any;
         // console.log("accountInfo: ", accountInfo);
         setView("list");
         props.onConnectSuccess?.(wallet.name);
