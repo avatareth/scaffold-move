@@ -172,14 +172,14 @@ const InstallGuide = (props: InstallGuideProps) => {
         </p>
         <button
           className="w-full rounded-lg bg-blue-500 px-4 py-3 text-white transition-colors hover:bg-blue-600"
-          onClick={() => {
-            if (!wallet.downloadUrl?.browserExtension) {
-              throw new Error(
-                `no downloadUrl config on this wallet: ${wallet.name}`
-              );
-            }
-            window.open(wallet.downloadUrl.browserExtension, "_blank");
-          }}
+          // onClick={() => {
+          //   if (!wallet.downloadUrl?.browserExtension) {
+          //     throw new Error(
+          //       `no downloadUrl config on this wallet: ${wallet.name}`
+          //     );
+          //   }
+          //   window.open(wallet.downloadUrl.browserExtension, "_blank");
+          // }}
         >
           Get Wallet
         </button>
@@ -274,8 +274,11 @@ export function WalletDialog(props: WalletDialogProps) {
         }
         setView("connecting");
         await select(wallet.name);
-        const accountInfo = (await wallet.adapter.connect()) as any;
-        console.log("accountInfo: ", accountInfo);
+        const accountInfo = (await wallet.adapter.connect(undefined, {
+          chainId: 177,
+          name: Network.TESTNET,
+        })) as any;
+        // console.log("accountInfo: ", accountInfo);
         setView("list");
         props.onConnectSuccess?.(wallet.name);
         props.onOpenChange?.(false);
