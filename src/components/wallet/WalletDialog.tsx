@@ -275,7 +275,7 @@ export function WalletDialog(props: WalletDialogProps) {
         setView("connecting");
         await select(wallet.name);
         const accountInfo = (await wallet.adapter.connect()) as any;
-        console.log("accountInfo: ", accountInfo);
+        // console.log("accountInfo: ", accountInfo);
         setView("list");
         props.onConnectSuccess?.(wallet.name);
         props.onOpenChange?.(false);
