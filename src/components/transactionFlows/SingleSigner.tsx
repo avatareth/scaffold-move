@@ -1,25 +1,46 @@
 import { isSendableNetwork, aptosClient } from "@/lib/utils";
 import { parseTypeTag, AccountAddress, U64, Aptos, Network, AptosConfig  } from "@aptos-labs/ts-sdk";
-import { InputTransactionData } from "@aptos-labs/wallet-adapter-core";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+
+import { NetworkName, useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Button } from "../ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { useToast } from "../ui/use-toast";
 import { TransactionHash } from "../TransactionHash";
+import { useEffect } from "react";
+import { useAptosWallet } from "@razorlabs/wallet-kit";
+import { useState } from "react";
+import { NetworkInfo } from "@aptos-labs/wallet-standard";
 
 const APTOS_COIN = "0x1::aptos_coin::AptosCoin";
 
 export function SingleSigner() {
   const { toast } = useToast();
   const {
-    connected,
-    account,
-    network,
     signAndSubmitTransaction,
     signMessageAndVerify,
     signMessage,
     signTransaction,
   } = useWallet();
+
+  const { connected, disconnect, account, adapter } =
+    useAptosWallet();
+  const [network, setNetwork] = useState<NetworkInfo | null>(null);
+
+  // Add useEffect to fetch network info
+  useEffect(() => {
+    const fetchNetwork = async () => {
+      if (adapter) {
+        try {
+          const networkInfo = await adapter.network();
+          setNetwork(networkInfo);
+        } catch (error) {
+          console.error("Failed to fetch network:", error);
+        }
+      }
+    };
+
+    fetchNetwork();
+  }, [adapter]);
   let sendable = isSendableNetwork(connected, network?.name);
 
   const onSignMessageAndVerify = async () => {
@@ -101,12 +122,12 @@ export function SingleSigner() {
           functionArguments: [AccountAddress.from(account.address), new U64(1)], // 1 is in Octas
         },
       });
-      await aptosClient(network).waitForTransaction({
+      await aptosClient({name: network?.name as unknown as NetworkName, url: network?.url}).waitForTransaction({
         transactionHash: response.hash,
       });
       toast({
         title: "Success",
-        description: <TransactionHash hash={response.hash} network={network} />,
+        description: <TransactionHash hash={response.hash} network={{name: network?.name as unknown as NetworkName, url: network?.url}} />,
       });
     } catch (error) {
       console.error(error);
@@ -137,7 +158,7 @@ export function SingleSigner() {
 
     try {
       const transactionToSign = await aptosClient(
-        network,
+        {name: network?.name as unknown as NetworkName, url: network?.url}
       ).transaction.build.simple({
         sender: account.address,
         data: {

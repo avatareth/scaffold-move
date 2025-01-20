@@ -5,20 +5,24 @@ import {
   AnyRawTransaction,
   Ed25519Account,
 } from "@aptos-labs/ts-sdk";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
-import { useState } from "react";
+import { NetworkName, useWallet } from "@aptos-labs/wallet-adapter-react";
+import { useState, useEffect } from "react";
 import { TransactionHash } from "../TransactionHash";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useToast } from "../ui/use-toast";
 import { LabelValueGrid } from "../LabelValueGrid";
+import { useAptosWallet } from "@razorlabs/wallet-kit";
+import { NetworkInfo, UserResponseStatus } from "@aptos-labs/wallet-standard";
 
 const APTOS_COIN = "0x1::aptos_coin::AptosCoin";
 
 export function MultiAgent() {
   const { toast } = useToast();
-  const { connected, account, network, signTransaction, submitTransaction } =
+  const {signTransaction, submitTransaction } =
     useWallet();
+  const { connected, disconnect, account, adapter } =
+    useAptosWallet();
 
   const [secondarySignerAccount, setSecondarySignerAccount] =
     useState<Ed25519Account>();
@@ -30,28 +34,53 @@ export function MultiAgent() {
   const [secondarySignerAuthenticator, setSecondarySignerAuthenticator] =
     useState<AccountAuthenticator>();
 
+  const [network, setNetwork] = useState<NetworkInfo | null>(null);
+
+  // Add useEffect to fetch network info
+  useEffect(() => {
+    const fetchNetwork = async () => {
+      if (adapter) {
+        try {
+          const networkInfo = await adapter.network();
+          setNetwork(networkInfo);
+        } catch (error) {
+          console.error("Failed to fetch network:", error);
+        }
+      }
+    };
+
+    fetchNetwork();
+  }, [adapter]);
+
   let sendable = isSendableNetwork(connected, network?.name);
 
   const generateTransaction = async (): Promise<AnyRawTransaction> => {
     if (!account) {
       throw new Error("no account");
     }
+    if (!adapter) {
+      throw new Error("no adapter");
+    }
     if (!network) {
       throw new Error("no network");
     }
 
     const secondarySigner = Account.generate();
-    // TODO: support custom network
-    await aptosClient(network).fundAccount({
+
+    await aptosClient({
+      name: network.name as unknown as NetworkName,
+      url: network.url,
+    }).fundAccount({
       accountAddress: secondarySigner.accountAddress.toString(),
       amount: 100_000_000,
-      options: { waitForIndexer: false }
+      options: { waitForIndexer: false },
     });
     setSecondarySignerAccount(secondarySigner);
 
-    const transactionToSign = await aptosClient(
-      network,
-    ).transaction.build.multiAgent({
+    const transactionToSign = await aptosClient({
+      name: network.name as unknown as NetworkName,
+      url: network.url,
+    }).transaction.build.multiAgent({
       sender: account.address,
       secondarySignerAddresses: [secondarySigner.accountAddress],
       data: {
@@ -78,6 +107,7 @@ export function MultiAgent() {
     if (!transactionToSubmit) {
       throw new Error("No Transaction to sign");
     }
+    
     try {
       const authenticator = await signTransaction(transactionToSubmit);
       setSecondarySignerAuthenticator(authenticator);
@@ -104,7 +134,15 @@ export function MultiAgent() {
       });
       toast({
         title: "Success",
-        description: <TransactionHash hash={response.hash} network={network} />,
+        description: (
+          <TransactionHash
+            hash={response.hash}
+            network={{
+              name: network?.name as unknown as NetworkName,
+              url: network?.url,
+            }}
+          />
+        ),
       });
     } catch (error) {
       toast({

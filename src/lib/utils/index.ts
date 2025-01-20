@@ -1,15 +1,16 @@
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import { NetworkInfo } from "@aptos-labs/wallet-adapter-core";
+import { NetworkName } from "@aptos-labs/wallet-adapter-react";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 export const aptosClient = (network?: NetworkInfo | null) => {
   
-  if (network?.name === Network.DEVNET) {
+  if (network?.name === Network.DEVNET as unknown as NetworkName) {
     return DEVNET_CLIENT;
-  } else if (network?.name === Network.TESTNET) {
+  } else if (network?.name === Network.TESTNET as unknown as NetworkName) {
     return TESTNET_CLIENT;
-  } else if (network?.name === Network.MAINNET) {
+  } else if (network?.name === Network.MAINNET as unknown as NetworkName) {
     throw new Error("Please use devnet or testnet for testing");
   } else {
     const CUSTOM_CONFIG = new AptosConfig({
