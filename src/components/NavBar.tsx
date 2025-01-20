@@ -2,7 +2,7 @@ import Image from "next/image";
 import { NavItem } from "./NavItem";
 import {
   MODULE_URL
-} from "../utils/constants";
+} from "../lib/utils/constants";
 
 export function NavBar() {
   return (

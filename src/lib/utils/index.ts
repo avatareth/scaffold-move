@@ -1,5 +1,7 @@
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import { NetworkInfo } from "@aptos-labs/wallet-adapter-core";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export const aptosClient = (network?: NetworkInfo | null) => {
   
@@ -41,3 +43,9 @@ export const isMainnet = (
 ): boolean => {
   return connected && networkName === Network.MAINNET;
 };
+
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+

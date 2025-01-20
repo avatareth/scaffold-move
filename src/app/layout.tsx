@@ -1,4 +1,4 @@
-import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
+// import "@aptos-labs/wallet-adapter-ant-design/dist/index.css";
 import "./globals.css";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -8,8 +8,7 @@ import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import { PropsWithChildren } from "react";
-import { AutoConnectProvider } from "@/components/AutoConnectProvider";
-import { ReactQueryClientProvider } from '@/components/ReactQueryClientProvider';
+import { ReactQueryClientProvider } from "@/components/ReactQueryClientProvider";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -28,7 +27,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
       <body
         className={cn(
           "flex justify-center min-h-screen bg-background font-sans antialiased",
-          fontSans.variable,
+          fontSans.variable
         )}
       >
         <ThemeProvider
@@ -37,14 +36,12 @@ export default function RootLayout({ children }: PropsWithChildren) {
           enableSystem
           disableTransitionOnChange
         >
-          <AutoConnectProvider>
-            <ReactQueryClientProvider>
-              <WalletProvider>
-                {children}
-                <Toaster />
-              </WalletProvider>
-            </ReactQueryClientProvider>
-          </AutoConnectProvider>
+          <ReactQueryClientProvider>
+            <WalletProvider>
+              {children}
+              <Toaster />
+            </WalletProvider>
+          </ReactQueryClientProvider>
         </ThemeProvider>
       </body>
     </html>

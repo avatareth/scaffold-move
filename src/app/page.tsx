@@ -9,7 +9,7 @@ import { SingleSigner } from "@/components/transactionFlows/SingleSigner";
 import { useToast } from "@/components/ui/use-toast";
 // import { Sponsor } from "@/components/transactionFlows/Sponsor";
 // import { TransactionParameters } from "@/components/transactionFlows/TransactionParameters";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+// import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Card,
   CardContent,
@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/card";
 // s
 // import { Switch } from "@/components/ui/switch";
-import { isMainnet } from "@/utils";
-import { Aptos, Network, AptosConfig } from "@aptos-labs/ts-sdk";
-import { WalletSelector as AntdWalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
+// import { isMainnet } from "@/utils";
+import { Aptos, Network, AptosConfig, InputGenerateTransactionPayloadData } from "@aptos-labs/ts-sdk";
+// import { WalletSelector as AntdWalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
 // import { WalletConnector as MuiWalletSelector } from "@aptos-labs/wallet-adapter-mui-design";
 import {
   AccountInfo,
@@ -42,7 +42,10 @@ import { useState, useEffect, useCallback } from "react";
 
 import { NavBar } from "@/components/NavBar";
 
-import { AptosWallet } from "@aptos-labs/wallet-standard";
+import { AptosWallet, UserResponseStatus } from "@aptos-labs/wallet-standard";
+
+import { WalletButton } from "@/components/wallet/WalletButton";
+import { useAptosWallet } from "@razorlabs/wallet-kit";
 
 // Add this interface declaration at the top of the file, after the imports
 declare global {
@@ -99,25 +102,28 @@ async function buildSimpleTransaction(
 export default function Home() {
   const { toast } = useToast();
 
-  const {
-    account,
-    connected,
-    network,
-    wallet,
-    changeNetwork,
-    signAndSubmitTransaction,
-  } = useWallet();
+  // const {
+  //   account,
+  //   connected,
+  //   network,
+  //   wallet,
+  //   changeNetwork,
+  //   signAndSubmitTransaction,
+  // } = useWallet();
+  const { connected, disconnect, account, signAndSubmitTransaction, adapter } =
+    useAptosWallet();
 
   // Move these inside useEffect to only run after connection
-  const [adapter, setAdapter] = useState<AptosWallet | null>(null);
+  // const [adapter, setAdapter] = useState<AptosWallet | null>(null);
   const [aptos, setAptos] = useState<Aptos | null>(null);
+  const [networkInfo, setNetworkInfo] = useState<NetworkInfo | null>(null);
 
   useEffect(() => {
     if (connected) {
-      const nightly = window.nightly?.aptos as AptosWallet;
-      // const nightlyAdapter = nightly?.standardWallet as AptosWallet;
-      console.log("nightlyAdapter", nightly);
-      setAdapter(nightly);
+      // const nightly = window.nightly?.aptos as AptosWallet;
+      // // const nightlyAdapter = nightly?.standardWallet as AptosWallet;
+      // console.log("nightlyAdapter", nightly);
+      // setAdapter(nightly);
 
       const aptosConfig = new AptosConfig({
         network: Network.TESTNET,
@@ -126,6 +132,21 @@ export default function Home() {
       setAptos(new Aptos(aptosConfig));
     }
   }, [connected]);
+
+  useEffect(() => {
+    const getNetwork = async () => {
+      if (adapter?.network) {
+        const network = await adapter.network();
+        setNetworkInfo({
+          name: network.name,
+          chainId: network.chainId.toString(),
+          url: network.url,
+        });
+      }
+    };
+
+    getNetwork();
+  }, [adapter]);
 
   const getBalance = useCallback(async () => {
     if (!account?.address || !adapter || !aptos) return;
@@ -141,23 +162,32 @@ export default function Home() {
     // Docs: https://docs.nightly.app/docs/aptos/solana/connect
     console.log("info", account, adapter, aptos);
     if (!account?.address) return;
+    const network = await adapter?.network();
     const aptosConfig = new AptosConfig({
       network: network?.name || Network.MAINNET,
     });
     const aptosClient = new Aptos(aptosConfig);
-    const signedTx = await signAndSubmitTransaction({
-      sender: account.address,
-      data: {
-        function: "0x1::coin::transfer",
-        typeArguments: ["0x1::aptos_coin::AptosCoin"],
-        functionArguments: [
-          "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
-          100,
-        ],
-      },
+    const transaction: InputGenerateTransactionPayloadData = {
+      function: "0x1::coin::transfer",
+      typeArguments: ["0x1::aptos_coin::AptosCoin"],
+      functionArguments: [
+        "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
+        100,
+      ],
+    };
+
+    const userResponse = await signAndSubmitTransaction({
+      payload: transaction,
     });
+
+    if (userResponse.status !== UserResponseStatus.APPROVED) {
+      throw new Error(userResponse.status);
+    }
+    // Confirm withdraw in backend
+    const hash = (userResponse as unknown as { args: { hash: string } })
+      .args.hash;
     try {
-      await aptosClient.waitForTransaction({ transactionHash: signedTx.hash });
+      await aptosClient.waitForTransaction({ transactionHash: hash });
     } catch (error) {
       console.error(error);
     }
@@ -178,8 +208,8 @@ export default function Home() {
     // TODO: adapt with OKX and petra here.
 
     toast({
-      title: signedTx.status,
-      description: "This transaction has been " + signedTx.status,
+      title: userResponse.status,
+      description: "This transaction has been " + userResponse.status,
     });
   }, [account]);
 
@@ -187,7 +217,7 @@ export default function Home() {
     <main className="flex flex-col w-full max-w-[1000px] p-6 pb-12 md:px-8 gap-6">
       <div className="flex justify-between items-center">
         <NavBar />
-        <WalletSelection />
+        <WalletButton />
         <ThemeToggle />
       </div>
       {connected && (
@@ -207,10 +237,22 @@ export default function Home() {
             Send Transaction Example: Transfer
           </button>
           <WalletConnection
-            account={account}
-            network={network}
-            wallet={wallet}
-            changeNetwork={changeNetwork}
+            account={
+              {
+                address: account?.address || "",
+                publicKey: account?.publicKey || "",
+                minKeysRequired: undefined,
+                ansName: undefined,
+              } as AccountInfo
+            }
+            network={networkInfo}
+            wallet={
+              {
+                name: adapter?.name || "",
+                icon: adapter?.icon || "",
+                url: "",
+              } as WalletInfo
+            }
           />
         </>
       )}
@@ -252,64 +294,19 @@ export default function Home() {
   );
 }
 
-function WalletSelection() {
-  const { autoConnect, setAutoConnect } = useAutoConnect();
-  setAutoConnect(true);
-
-  return (
-    <AntdWalletSelector />
-    // <Card>
-    //   <CardHeader>
-    //     <CardTitle>Wallet Selection</CardTitle>
-    //     <CardDescription>
-    //       Connect a wallet using one of the following wallet selectors.
-    //     </CardDescription>
-    //   </CardHeader>
-    //   <CardContent>
-    //     <div className="flex flex-wrap gap-6 pt-6 pb-12 justify-between items-center">
-    //       {/* <div className="flex flex-col gap-4 items-center">
-    //         <div className="text-sm text-muted-foreground">shadcn/ui</div>
-    //         <ShadcnWalletSelector />
-    //       </div> */}
-    //       <div className="flex flex-col gap-4 items-center">
-    //         <div className="text-sm text-muted-foreground">Ant Design</div>
-    //         <AntdWalletSelector />
-    //       </div>
-    //       {/* <div className="flex flex-col gap-4 items-center">
-    //         <div className="text-sm text-muted-foreground">Material UI</div>
-    //         <MuiWalletSelector />
-    //       </div> */}
-    //     </div>
-    //     <label className="flex items-center gap-4 cursor-pointer">
-    //       <Switch
-    //         id="auto-connect-switch"
-    //         checked={autoConnect}
-    //         onCheckedChange={setAutoConnect}
-    //       />
-    //       <Label htmlFor="auto-connect-switch">
-    //         Auto reconnect on page load
-    //       </Label>
-    //     </label>
-    //   </CardContent>
-    // </Card>
-  );
-}
-
 interface WalletConnectionProps {
   account: AccountInfo | null;
   network: NetworkInfo | null;
   wallet: WalletInfo | null;
-  changeNetwork: (network: Network) => Promise<AptosChangeNetworkOutput>;
 }
 
 function WalletConnection({
   account,
   network,
   wallet,
-  changeNetwork,
 }: WalletConnectionProps) {
   const isValidNetworkName = () => {
-    if (isAptosNetwork(network)) {
+    if (network && isAptosNetwork(network)) {
       return Object.values<string | undefined>(Network).includes(network?.name);
     }
     // If the configured network is not an Aptos network, i.e is a custom network
