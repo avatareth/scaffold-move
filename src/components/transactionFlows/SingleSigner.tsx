@@ -1,4 +1,4 @@
-import { isSendableNetwork, aptosClient } from "@/utils";
+import { isSendableNetwork, aptosClient } from "@/lib/utils";
 import { parseTypeTag, AccountAddress, U64, Aptos, Network, AptosConfig  } from "@aptos-labs/ts-sdk";
 import { InputTransactionData } from "@aptos-labs/wallet-adapter-core";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";

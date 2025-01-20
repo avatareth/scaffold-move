@@ -9,7 +9,7 @@ import { SingleSigner } from "@/components/transactionFlows/SingleSigner";
 import { useToast } from "@/components/ui/use-toast";
 // import { Sponsor } from "@/components/transactionFlows/Sponsor";
 // import { TransactionParameters } from "@/components/transactionFlows/TransactionParameters";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+// import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Card,
   CardContent,
@@ -19,9 +19,9 @@ import {
 } from "@/components/ui/card";
 // s
 // import { Switch } from "@/components/ui/switch";
-import { isMainnet } from "@/utils";
+// import { isMainnet } from "@/utils";
 import { Aptos, Network, AptosConfig } from "@aptos-labs/ts-sdk";
-import { WalletSelector as AntdWalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
+// import { WalletSelector as AntdWalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
 // import { WalletConnector as MuiWalletSelector } from "@aptos-labs/wallet-adapter-mui-design";
 import {
   AccountInfo,
@@ -43,6 +43,8 @@ import { useState, useEffect, useCallback } from "react";
 import { NavBar } from "@/components/NavBar";
 
 import { AptosWallet } from "@aptos-labs/wallet-standard";
+
+import { WalletButton } from "@/components/wallet/WalletButton";
 
 // Add this interface declaration at the top of the file, after the imports
 declare global {
@@ -187,7 +189,7 @@ export default function Home() {
     <main className="flex flex-col w-full max-w-[1000px] p-6 pb-12 md:px-8 gap-6">
       <div className="flex justify-between items-center">
         <NavBar />
-        <WalletSelection />
+        <WalletButton />
         <ThemeToggle />
       </div>
       {connected && (
@@ -249,49 +251,6 @@ export default function Home() {
         </>
       )}
     </main>
-  );
-}
-
-function WalletSelection() {
-  const { autoConnect, setAutoConnect } = useAutoConnect();
-  setAutoConnect(true);
-
-  return (
-    <AntdWalletSelector />
-    // <Card>
-    //   <CardHeader>
-    //     <CardTitle>Wallet Selection</CardTitle>
-    //     <CardDescription>
-    //       Connect a wallet using one of the following wallet selectors.
-    //     </CardDescription>
-    //   </CardHeader>
-    //   <CardContent>
-    //     <div className="flex flex-wrap gap-6 pt-6 pb-12 justify-between items-center">
-    //       {/* <div className="flex flex-col gap-4 items-center">
-    //         <div className="text-sm text-muted-foreground">shadcn/ui</div>
-    //         <ShadcnWalletSelector />
-    //       </div> */}
-    //       <div className="flex flex-col gap-4 items-center">
-    //         <div className="text-sm text-muted-foreground">Ant Design</div>
-    //         <AntdWalletSelector />
-    //       </div>
-    //       {/* <div className="flex flex-col gap-4 items-center">
-    //         <div className="text-sm text-muted-foreground">Material UI</div>
-    //         <MuiWalletSelector />
-    //       </div> */}
-    //     </div>
-    //     <label className="flex items-center gap-4 cursor-pointer">
-    //       <Switch
-    //         id="auto-connect-switch"
-    //         checked={autoConnect}
-    //         onCheckedChange={setAutoConnect}
-    //       />
-    //       <Label htmlFor="auto-connect-switch">
-    //         Auto reconnect on page load
-    //       </Label>
-    //     </label>
-    //   </CardContent>
-    // </Card>
   );
 }
 
