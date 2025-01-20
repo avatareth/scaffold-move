@@ -4,19 +4,36 @@ import {
   AccountAuthenticator,
   AnyRawTransaction,
 } from "@aptos-labs/ts-sdk";
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import { NetworkName, useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useState } from "react";
 import { TransactionHash } from "../TransactionHash";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useToast } from "../ui/use-toast";
+import { useAptosWallet } from "@razorlabs/wallet-kit";
+import { NetworkInfo } from "@aptos-labs/wallet-standard";
+import { useEffect } from "react";
 
 const APTOS_COIN = "0x1::aptos_coin::AptosCoin";
 
 export function Sponsor() {
   const { toast } = useToast();
-  const { connected, account, network, signTransaction, submitTransaction } =
-    useWallet();
+  const { signTransaction, submitTransaction } = useWallet();
+  const { connected, account, adapter } = useAptosWallet();
+  const [network, setNetwork] = useState<NetworkInfo | null>(null);
+  useEffect(() => {
+    const fetchNetwork = async () => {
+      if (adapter) {
+        try {
+          const networkInfo = await adapter.network();
+          setNetwork(networkInfo);
+        } catch (error) {
+          console.error("Failed to fetch network:", error);
+        }
+      }
+    };
+    fetchNetwork();
+  }, [adapter]);
   const [transactionToSubmit, setTransactionToSubmit] =
     useState<AnyRawTransaction | null>(null);
 
@@ -36,9 +53,10 @@ export function Sponsor() {
     if (!account) {
       throw new Error("no account");
     }
-    const transactionToSign = await aptosClient(
-      network
-    ).transaction.build.simple({
+    const transactionToSign = await aptosClient({
+      name: network?.name as unknown as NetworkName,
+      url: network?.url,
+    }).transaction.build.simple({
       sender: account.address,
       withFeePayer: true,
       data: {
@@ -67,13 +85,11 @@ export function Sponsor() {
       throw new Error("No Transaction to sign");
     }
     try {
-      await aptosClient(network).fundAccount({
+      await aptosClient({name: network?.name as unknown as NetworkName, url: network?.url}).fundAccount({
         accountAddress: sponsor.accountAddress,
         amount: SPONSOR_INITIAL_BALANCE,
       });
-      const authenticator = await aptosClient(
-        network
-      ).transaction.signAsFeePayer({
+      const authenticator = await aptosClient({name: network?.name as unknown as NetworkName, url: network?.url}).transaction.signAsFeePayer({
         signer: sponsor,
         transaction: transactionToSubmit,
       });
@@ -101,7 +117,7 @@ export function Sponsor() {
       });
       toast({
         title: "Success",
-        description: <TransactionHash hash={response.hash} network={network} />,
+        description: <TransactionHash hash={response.hash} network={{name: network?.name as unknown as NetworkName, url: network?.url}} />,
       });
     } catch (error) {
       console.error(error);

@@ -1,19 +1,39 @@
 import { aptosClient, isSendableNetwork } from "@/lib/utils";
 import {
   InputTransactionData,
+  NetworkName,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useToast } from "../ui/use-toast";
+import { useAptosWallet } from "@razorlabs/wallet-kit";
+import { NetworkInfo } from "@aptos-labs/wallet-standard";
+import { useState } from "react";
+import { useEffect } from "react";
 
 const APTOS_COIN = "0x1::aptos_coin::AptosCoin";
 const MaxGasAMount = 10000;
 
 export function TransactionParameters() {
   const { toast } = useToast();
-  const { connected, account, network, signAndSubmitTransaction, wallet } =
+  const { signAndSubmitTransaction, wallet } =
     useWallet();
+  const { connected, account, adapter } = useAptosWallet();
+  const [network, setNetwork] = useState<NetworkInfo | null>(null);
+  useEffect(() => {
+    const fetchNetwork = async () => {
+      if (adapter) {
+        try {
+          const networkInfo = await adapter.network();
+          setNetwork(networkInfo);
+        } catch (error) {
+          console.error("Failed to fetch network:", error);
+        }
+      }
+    };
+    fetchNetwork();
+  }, [adapter]);
   let sendable = isSendableNetwork(connected, network?.name);
 
   const onSignAndSubmitTransaction = async () => {
@@ -28,7 +48,7 @@ export function TransactionParameters() {
     };
     try {
       const commitedTransaction = await signAndSubmitTransaction(transaction);
-      const executedTransaction = await aptosClient(network).waitForTransaction(
+      const executedTransaction = await aptosClient({name: network?.name as unknown as NetworkName, url: network?.url}).waitForTransaction(
         {
           transactionHash: commitedTransaction.hash,
         },
