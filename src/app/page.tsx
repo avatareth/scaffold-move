@@ -20,7 +20,12 @@ import {
 // s
 // import { Switch } from "@/components/ui/switch";
 // import { isMainnet } from "@/utils";
-import { Aptos, Network, AptosConfig, InputGenerateTransactionPayloadData } from "@aptos-labs/ts-sdk";
+import {
+  Aptos,
+  Network,
+  AptosConfig,
+  InputGenerateTransactionPayloadData,
+} from "@aptos-labs/ts-sdk";
 // import { WalletSelector as AntdWalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
 // import { WalletConnector as MuiWalletSelector } from "@aptos-labs/wallet-adapter-mui-design";
 import {
@@ -160,11 +165,14 @@ export default function Home() {
   // Example usage within your component:
   const handleTransaction = useCallback(async () => {
     // Docs: https://docs.nightly.app/docs/aptos/solana/connect
-    console.log("info", account, adapter, aptos);
+    // console.log("info", account, adapter, aptos);
     if (!account?.address) return;
     const network = await adapter?.network();
+    // if (network?.chainId !== 177) {
+    //   await adapter?.changeNetwork({ name: Network.TESTNET, chainId: 177 });
+    // }
     const aptosConfig = new AptosConfig({
-      network: network?.name || Network.MAINNET,
+      network: network?.name || Network.TESTNET,
     });
     const aptosClient = new Aptos(aptosConfig);
     const transaction: InputGenerateTransactionPayloadData = {
@@ -184,8 +192,8 @@ export default function Home() {
       throw new Error(userResponse.status);
     }
     // Confirm withdraw in backend
-    const hash = (userResponse as unknown as { args: { hash: string } })
-      .args.hash;
+    const hash = (userResponse as unknown as { args: { hash: string } }).args
+      .hash;
     try {
       await aptosClient.waitForTransaction({ transactionHash: hash });
     } catch (error) {
@@ -300,11 +308,7 @@ interface WalletConnectionProps {
   wallet: WalletInfo | null;
 }
 
-function WalletConnection({
-  account,
-  network,
-  wallet,
-}: WalletConnectionProps) {
+function WalletConnection({ account, network, wallet }: WalletConnectionProps) {
   const isValidNetworkName = () => {
     if (network && isAptosNetwork(network)) {
       return Object.values<string | undefined>(Network).includes(network?.name);
