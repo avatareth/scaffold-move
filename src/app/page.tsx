@@ -29,7 +29,6 @@ import {
 // import { WalletSelector as AntdWalletSelector } from "@aptos-labs/wallet-adapter-ant-design";
 // import { WalletConnector as MuiWalletSelector } from "@aptos-labs/wallet-adapter-mui-design";
 import {
-  AccountInfo,
   AptosChangeNetworkOutput,
   NetworkInfo,
   WalletInfo,
@@ -47,10 +46,11 @@ import { useState, useEffect, useCallback } from "react";
 
 import { NavBar } from "@/components/NavBar";
 
-import { AptosWallet, UserResponseStatus } from "@aptos-labs/wallet-standard";
+import { AptosWallet, ReadonlyUint8Array, UserResponseStatus } from "@aptos-labs/wallet-standard";
 
 import { WalletButton } from "@/components/wallet/WalletButton";
 import { useAptosWallet } from "@razorlabs/wallet-kit";
+import { isValidElement } from "react";
 
 // Add this interface declaration at the top of the file, after the imports
 declare global {
@@ -59,6 +59,17 @@ declare global {
       aptos: AptosWallet;
     };
   }
+}
+
+interface AccountInfo {
+  address: {
+    data: Uint8Array;
+  };
+  publicKey: {
+    key: {
+      data: Uint8Array;
+    };
+  };
 }
 
 // Example of how to register a browser extension wallet plugin.
@@ -117,6 +128,7 @@ export default function Home() {
   // } = useWallet();
   const { connected, disconnect, account, signAndSubmitTransaction, adapter } =
     useAptosWallet();
+  const [accountInfo, setAccountInfo] = useState<AccountInfo| null>(null);
 
   // Move these inside useEffect to only run after connection
   // const [adapter, setAdapter] = useState<AptosWallet | null>(null);
@@ -147,6 +159,11 @@ export default function Home() {
           chainId: network.chainId.toString(),
           url: network.url,
         });
+      }
+      if (adapter?.account) {
+        const accountInfo = await adapter.account();
+        // console.log("accountInfo", accountInfo);
+        setAccountInfo(accountInfo as unknown as AccountInfo);
       }
     };
 
@@ -249,14 +266,14 @@ export default function Home() {
             Send Transaction Example: Transfer
           </button>
           <WalletConnection
-            account={
-              {
-                address: account?.address || "",
-                publicKey: account?.publicKey || "",
-                minKeysRequired: undefined,
-                ansName: undefined,
-              } as AccountInfo
-            }
+            // account={
+            //   {
+            //     address: account?.address || "",
+            //     publicKey: account?.publicKey || "",
+            //     minKeysRequired: undefined,
+            //     ansName: undefined,
+            //   } as AccountInfo
+            account={accountInfo}
             network={networkInfo}
             wallet={
               {
@@ -317,13 +334,94 @@ function WalletConnection({ account, network, wallet }: WalletConnectionProps) {
     if (network && isAptosNetwork(network)) {
       return Object.values<string | undefined>(Network).includes(network?.name);
     }
-    // If the configured network is not an Aptos network, i.e is a custom network
-    // we resolve it as a valid network name
     return true;
   };
 
-  // TODO: Do a proper check for network change support
   const isNetworkChangeSupported = wallet?.name === "Nightly";
+  
+  // Add function to handle address conversion
+  const getAddressString = () => {
+    if (!account?.address) return null;
+    
+    try {
+      if (typeof account.address === 'object' && 'data' in account.address) {
+        const addressData = account.address.data;
+        return Object.values(addressData)
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+      }
+      
+      if (typeof account.address === 'string') {
+        return account.address;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error processing address:', error);
+      return null;
+    }
+  };
+
+  const getPublicKeyString = () => {
+    if (!account?.publicKey) return null;
+    
+    try {
+      if (typeof account.publicKey === 'object' && 'key' in account.publicKey) {
+        const keyData = account.publicKey.key.data;
+        return Object.values(keyData)
+          .map(b => b.toString(16).padStart(2, '0'))
+          .join('');
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error processing public key:', error);
+      return null;
+    }
+  };
+
+  const address = getAddressString();
+  const publicKey = getPublicKeyString();
+
+  const items = [
+    {
+      label: "Address",
+      value: (
+        <DisplayValue
+          value={address ? "0x" + address : "Not Present"}
+          isCorrect={!!address}
+        />
+      ),
+    },
+    {
+      label: "Public key",
+      value: (
+        <DisplayValue
+          value={publicKey ? "0x" + publicKey : "Not Present"}
+          isCorrect={!!publicKey}
+        />
+      ),
+    },
+    {
+      label: "ANS name",
+      subLabel: "(only if attached)",
+      value: "Not Present",
+    },
+    {
+      label: "Min keys required",
+      subLabel: "(only for multisig)",
+      value: "Not Present",
+    },
+  ];
+
+  // Debug logs
+  console.log('=== Debug Info ===');
+  console.log('Account:', JSON.stringify(account, null, 2));
+  console.log('Network:', JSON.stringify(network, null, 2));
+  console.log('Wallet:', JSON.stringify(wallet, null, 2));
+
+  console.log('Processed address:', address);
+  console.log('Processed publicKey:', publicKey);
 
   return (
     <Card>
@@ -350,7 +448,7 @@ function WalletConnection({ account, network, wallet }: WalletConnectionProps) {
               },
               {
                 label: "Name",
-                value: <p>{wallet?.name ?? "Not Present"}</p>,
+                value: wallet?.name ?? "Not Present",
               },
               {
                 label: "URL",
@@ -373,40 +471,7 @@ function WalletConnection({ account, network, wallet }: WalletConnectionProps) {
 
         <div className="flex flex-col gap-6">
           <h4 className="text-lg font-medium">Account Info</h4>
-          <LabelValueGrid
-            items={[
-              {
-                label: "Address",
-                value: (
-                  <DisplayValue
-                    value={account?.address ?? "Not Present"}
-                    isCorrect={!!account?.address}
-                  />
-                ),
-              },
-              {
-                label: "Public key",
-                value: (
-                  <DisplayValue
-                    value={account?.publicKey.toString() ?? "Not Present"}
-                    isCorrect={!!account?.publicKey}
-                  />
-                ),
-              },
-              {
-                label: "ANS name",
-                subLabel: "(only if attached)",
-                value: <p>{account?.ansName ?? "Not Present"}</p>,
-              },
-              {
-                label: "Min keys required",
-                subLabel: "(only for multisig)",
-                value: (
-                  <p>{account?.minKeysRequired?.toString() ?? "Not Present"}</p>
-                ),
-              },
-            ]}
-          />
+          <LabelValueGrid items={items} />
         </div>
 
         <div className="flex flex-col gap-6">
@@ -440,7 +505,7 @@ function WalletConnection({ account, network, wallet }: WalletConnectionProps) {
               },
               {
                 label: "Chain ID",
-                value: <p>{network?.chainId ?? "Not Present"}</p>,
+                value: network?.chainId ?? "Not Present",
               },
             ]}
           />

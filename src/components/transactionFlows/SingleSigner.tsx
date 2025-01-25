@@ -1,5 +1,13 @@
 import { isSendableNetwork, aptosClient } from "@/lib/utils";
-import { parseTypeTag, AccountAddress, U64, Aptos, Network, AptosConfig  } from "@aptos-labs/ts-sdk";
+import {
+  parseTypeTag,
+  AccountAddress,
+  U64,
+  Aptos,
+  Network,
+  AptosConfig,
+  InputGenerateTransactionPayloadData,
+} from "@aptos-labs/ts-sdk";
 
 import { NetworkName, useWallet } from "@aptos-labs/wallet-adapter-react";
 import { Button } from "../ui/button";
@@ -9,21 +17,22 @@ import { TransactionHash } from "../TransactionHash";
 import { useEffect } from "react";
 import { useAptosWallet } from "@razorlabs/wallet-kit";
 import { useState } from "react";
-import { NetworkInfo } from "@aptos-labs/wallet-standard";
+import { NetworkInfo, UserResponseStatus } from "@aptos-labs/wallet-standard";
 
 const APTOS_COIN = "0x1::aptos_coin::AptosCoin";
 
 export function SingleSigner() {
   const { toast } = useToast();
-  const {
-    signAndSubmitTransaction,
-    signMessageAndVerify,
-    signMessage,
-    signTransaction,
-  } = useWallet();
-
-  const { connected, disconnect, account, adapter } =
+  // const {
+  //   signAndSubmitTransaction,
+  //   signMessageAndVerify,
+  //   signMessage,
+  //   signTransaction,
+  // } = useWallet();
+  const { signAndSubmitTransaction, signMessage, signTransaction } =
     useAptosWallet();
+
+  const { connected, disconnect, account, adapter } = useAptosWallet();
   const [network, setNetwork] = useState<NetworkInfo | null>(null);
 
   // Add useEffect to fetch network info
@@ -48,10 +57,55 @@ export function SingleSigner() {
       message: "Hello from Movement Wallet Adapter",
       nonce: Math.random().toString(16),
     };
-    const response = await signMessageAndVerify(payload);
+    const response = await signMessage(payload) as unknown as {
+      args: {
+        signature: {
+          data: {
+            data: Uint8Array;
+          };
+        };
+        address: string;
+        application: string;
+        chainId: string;
+        message: string;
+        nonce: string;
+        fullMessage: string;
+        status: string;
+      };
+    };
+    // Format the response in a more readable way
+    const formattedResponse = {
+      onSignMessageAndVerify: {
+        args: {
+          prefix: "APTOS",
+          signature: {
+            // Convert byte array to hex string for better readability
+            hex: Array.from(response.args.signature.data.data)
+              .map(b => b.toString(16).padStart(2, '0'))
+              .join(''),
+          },
+          address: response.args.address,
+          application: response.args.application,
+          chainId: response.args.chainId,
+          message: response.args.message,
+          nonce: response.args.nonce,
+          fullMessage: response.args.fullMessage,
+        },
+        status: response.args.status
+      }
+    };
     toast({
       title: "Success",
-      description: JSON.stringify({ onSignMessageAndVerify: response }),
+      description: (
+        <pre style={{ 
+          whiteSpace: 'pre-wrap', 
+          wordBreak: 'break-all',
+          maxHeight: '400px',
+          overflow: 'auto'
+        }}>
+          {JSON.stringify(formattedResponse, null, 2)}
+        </pre>
+      ),
     });
   };
 
@@ -60,10 +114,55 @@ export function SingleSigner() {
       message: "Hello from Movement Wallet Adapter",
       nonce: Math.random().toString(16),
     };
-    const response = await signMessage(payload);
+    const response = await signMessage(payload) as unknown as {
+      args: {
+        signature: {
+          data: {
+            data: Uint8Array;
+          };
+        };
+        address: string;
+        application: string;
+        chainId: string;
+        message: string;
+        nonce: string;
+        fullMessage: string;
+        status: string;
+      };
+    };
+    // Format the response in a more readable way
+    const formattedResponse = {
+      onSignMessage: {
+        args: {
+          prefix: "APTOS",
+          signature: {
+            // Convert byte array to hex string for better readability
+            hex: Array.from(response.args.signature.data.data)
+              .map(b => b.toString(16).padStart(2, '0'))
+              .join(''),
+          },
+          address: response.args.address,
+          application: response.args.application,
+          chainId: response.args.chainId,
+          message: response.args.message,
+          nonce: response.args.nonce,
+          fullMessage: response.args.fullMessage,
+        },
+        status: response.args.status
+      }
+    };
     toast({
       title: "Success",
-      description: JSON.stringify({ onSignMessage: response }),
+      description: (
+        <pre style={{ 
+          whiteSpace: 'pre-wrap', 
+          wordBreak: 'break-all',
+          maxHeight: '400px',
+          overflow: 'auto'
+        }}>
+          {JSON.stringify(formattedResponse, null, 2)}
+        </pre>
+      ),
     });
   };
 
@@ -81,7 +180,7 @@ export function SingleSigner() {
       network: Network.CUSTOM,
       fullnode: "https://aptos.testnet.porto.movementlabs.xyz/v1",
     });
-    
+
     const aptos = new Aptos(aptosConfig);
     console.log("aptos", aptos);
     const transaction = await aptos.transaction.build.simple({
@@ -96,7 +195,7 @@ export function SingleSigner() {
       },
     });
     console.log("transaction", transaction);
-    
+
     // try {
     //   const response = await signAndSubmitTransaction(transaction);
     //   await aptosClient(network).waitForTransaction({
@@ -113,21 +212,31 @@ export function SingleSigner() {
 
   const onSignAndSubmitBCSTransaction = async () => {
     if (!account) return;
-
+    const payload: InputGenerateTransactionPayloadData = {
+      function: "0x1::coin::transfer",
+      typeArguments: [parseTypeTag(APTOS_COIN)],
+      functionArguments: [AccountAddress.from(account.address), new U64(1)], // 1 is in Octas
+    };
     try {
-      const response = await signAndSubmitTransaction({
-        data: {
-          function: "0x1::coin::transfer",
-          typeArguments: [parseTypeTag(APTOS_COIN)],
-          functionArguments: [AccountAddress.from(account.address), new U64(1)], // 1 is in Octas
-        },
-      });
-      await aptosClient({name: network?.name as unknown as NetworkName, url: network?.url}).waitForTransaction({
-        transactionHash: response.hash,
-      });
+      const userResponse = await signAndSubmitTransaction({ payload });
+      if (userResponse.status !== UserResponseStatus.APPROVED) {
+        throw new Error(userResponse.status);
+      }
+      // Confirm withdraw in backend
+      const hash = (userResponse as unknown as { args: { hash: string } }).args
+        .hash;
+
       toast({
         title: "Success",
-        description: <TransactionHash hash={response.hash} network={{name: network?.name as unknown as NetworkName, url: network?.url}} />,
+        description: (
+          <TransactionHash
+            hash={hash}
+            network={{
+              name: network?.name as unknown as NetworkName,
+              url: network?.url,
+            }}
+          />
+        ),
       });
     } catch (error) {
       console.error(error);
@@ -135,31 +244,31 @@ export function SingleSigner() {
   };
 
   // Legacy typescript sdk support
-  const onSignTransaction = async () => {
-    try {
-      const payload = {
-        type: "entry_function_payload",
-        function: "0x1::coin::transfer",
-        type_arguments: ["0x1::aptos_coin::AptosCoin"],
-        arguments: [account?.address, 1], // 1 is in Octas
-      };
-      const response = await signTransaction(payload);
-      toast({
-        title: "Success",
-        description: JSON.stringify(response),
-      });
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const onSignTransaction = async () => {
+  //   try {
+  //     const payload: InputGenerateTransactionPayloadData = {
+  //       function: "0x1::coin::transfer",
+  //       typeArguments: ["0x1::aptos_coin::AptosCoin"],
+  //       functionArguments: [account?.address, 1], // 1 is in Octas
+  //     };
+  //     const response = await signTransaction(payload);
+  //     toast({
+  //       title: "Success",
+  //       description: JSON.stringify(response),
+  //     });
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   const onSignTransactionV2 = async () => {
     if (!account) return;
 
     try {
-      const transactionToSign = await aptosClient(
-        {name: network?.name as unknown as NetworkName, url: network?.url}
-      ).transaction.build.simple({
+      const transactionToSign = await aptosClient({
+        name: network?.name as unknown as NetworkName,
+        url: network?.url,
+      }).transaction.build.simple({
         sender: account.address,
         data: {
           function: "0x1::coin::transfer",
@@ -195,10 +304,8 @@ export function SingleSigner() {
         <Button onClick={onSignTransactionV2} disabled={!sendable}>
           Sign transaction V2
         </Button> */}
-        <Button onClick={onSignMessage} >
-          Sign message
-        </Button>
-        <Button onClick={onSignMessageAndVerify} >
+        <Button onClick={onSignMessage}>Sign message</Button>
+        <Button onClick={onSignMessageAndVerify}>
           Sign message and verify
         </Button>
       </CardContent>
