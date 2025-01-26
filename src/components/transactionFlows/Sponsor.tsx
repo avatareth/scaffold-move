@@ -3,6 +3,7 @@ import {
   Account,
   AccountAuthenticator,
   AnyRawTransaction,
+  Network,
 } from "@aptos-labs/ts-sdk";
 import { NetworkName, useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useState } from "react";
@@ -54,8 +55,9 @@ export function Sponsor() {
       throw new Error("no account");
     }
     const transactionToSign = await aptosClient({
-      name: network?.name as unknown as NetworkName,
+      name: network?.name as unknown as Network,
       url: network?.url,
+      chainId: network?.chainId ?? 0,
     }).transaction.build.simple({
       sender: account.address,
       withFeePayer: true,
@@ -85,11 +87,19 @@ export function Sponsor() {
       throw new Error("No Transaction to sign");
     }
     try {
-      await aptosClient({name: network?.name as unknown as NetworkName, url: network?.url}).fundAccount({
+      await aptosClient({
+        name: network?.name as unknown as Network,
+        url: network?.url,
+        chainId: network?.chainId ?? 0,
+      }).fundAccount({
         accountAddress: sponsor.accountAddress,
         amount: SPONSOR_INITIAL_BALANCE,
       });
-      const authenticator = await aptosClient({name: network?.name as unknown as NetworkName, url: network?.url}).transaction.signAsFeePayer({
+      const authenticator = await aptosClient({
+        name: network?.name as unknown as Network,
+        url: network?.url,
+        chainId: network?.chainId ?? 0,
+      }).transaction.signAsFeePayer({
         signer: sponsor,
         transaction: transactionToSubmit,
       });
@@ -117,7 +127,16 @@ export function Sponsor() {
       });
       toast({
         title: "Success",
-        description: <TransactionHash hash={response.hash} network={{name: network?.name as unknown as NetworkName, url: network?.url}} />,
+        description: (
+          <TransactionHash
+            hash={response.hash}
+            network={{
+              name: network?.name as unknown as Network,
+              url: network?.url,
+              chainId: network?.chainId ?? 0,
+            }}
+          />
+        ),
       });
     } catch (error) {
       console.error(error);

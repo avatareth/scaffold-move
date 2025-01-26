@@ -7,6 +7,8 @@ import {
   Network,
   AptosConfig,
   InputGenerateTransactionPayloadData,
+  Ed25519PublicKey,
+  Ed25519Signature,
 } from "@aptos-labs/ts-sdk";
 
 import { NetworkName, useWallet } from "@aptos-labs/wallet-adapter-react";
@@ -53,11 +55,13 @@ export function SingleSigner() {
   let sendable = isSendableNetwork(connected, network?.name);
 
   const onSignMessageAndVerify = async () => {
+    if (!adapter) return;
+    const account = await adapter.account();
     const payload = {
       message: "Hello from Movement Wallet Adapter",
       nonce: Math.random().toString(16),
     };
-    const response = await signMessage(payload) as unknown as {
+    const response = await adapter?.signMessage(payload) as unknown as {
       args: {
         signature: {
           data: {
@@ -74,15 +78,17 @@ export function SingleSigner() {
       };
     };
     // Format the response in a more readable way
+    // console.log("response", response);
+    const signature = Array.from(response.args.signature.data.data)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
     const formattedResponse = {
       onSignMessageAndVerify: {
         args: {
           prefix: "APTOS",
           signature: {
             // Convert byte array to hex string for better readability
-            hex: Array.from(response.args.signature.data.data)
-              .map(b => b.toString(16).padStart(2, '0'))
-              .join(''),
+            hex: signature,
           },
           address: response.args.address,
           application: response.args.application,
@@ -94,6 +100,13 @@ export function SingleSigner() {
         status: response.args.status
       }
     };
+
+    const verified = account.publicKey.verifySignature({
+      message: response.args.fullMessage,
+      signature: new Ed25519Signature(signature),
+    });
+    // console.log("verified", verified);
+    
     toast({
       title: "Success",
       description: (
@@ -103,18 +116,24 @@ export function SingleSigner() {
           maxHeight: '400px',
           overflow: 'auto'
         }}>
-          {JSON.stringify(formattedResponse, null, 2)}
+          {JSON.stringify({
+            message: response.args.message,
+            signature: signature,
+            verified: verified,
+          }, null, 2)}
         </pre>
       ),
     });
   };
 
   const onSignMessage = async () => {
+    if (!adapter) return;
+    const account = await adapter.account();
     const payload = {
       message: "Hello from Movement Wallet Adapter",
       nonce: Math.random().toString(16),
     };
-    const response = await signMessage(payload) as unknown as {
+    const response = await adapter?.signMessage(payload) as unknown as {
       args: {
         signature: {
           data: {
@@ -131,15 +150,16 @@ export function SingleSigner() {
       };
     };
     // Format the response in a more readable way
+    const signature = Array.from(response.args.signature.data.data)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
     const formattedResponse = {
       onSignMessage: {
         args: {
           prefix: "APTOS",
           signature: {
             // Convert byte array to hex string for better readability
-            hex: Array.from(response.args.signature.data.data)
-              .map(b => b.toString(16).padStart(2, '0'))
-              .join(''),
+            hex: signature,
           },
           address: response.args.address,
           application: response.args.application,
@@ -232,8 +252,9 @@ export function SingleSigner() {
           <TransactionHash
             hash={hash}
             network={{
-              name: network?.name as unknown as NetworkName,
+              name: network?.name as unknown as Network,
               url: network?.url,
+              chainId: network?.chainId ?? 0,
             }}
           />
         ),
@@ -266,8 +287,9 @@ export function SingleSigner() {
 
     try {
       const transactionToSign = await aptosClient({
-        name: network?.name as unknown as NetworkName,
+        name: network?.name as unknown as Network,
         url: network?.url,
+        chainId: network?.chainId ?? 0,
       }).transaction.build.simple({
         sender: account.address,
         data: {

@@ -1,6 +1,7 @@
 import { aptosClient, isSendableNetwork } from "@/lib/utils";
 import {
   InputTransactionData,
+  Network,
   NetworkName,
   useWallet,
 } from "@aptos-labs/wallet-adapter-react";
@@ -17,8 +18,7 @@ const MaxGasAMount = 10000;
 
 export function TransactionParameters() {
   const { toast } = useToast();
-  const { signAndSubmitTransaction, wallet } =
-    useWallet();
+  const { signAndSubmitTransaction, wallet } = useWallet();
   const { connected, account, adapter } = useAptosWallet();
   const [network, setNetwork] = useState<NetworkInfo | null>(null);
   useEffect(() => {
@@ -48,11 +48,13 @@ export function TransactionParameters() {
     };
     try {
       const commitedTransaction = await signAndSubmitTransaction(transaction);
-      const executedTransaction = await aptosClient({name: network?.name as unknown as NetworkName, url: network?.url}).waitForTransaction(
-        {
-          transactionHash: commitedTransaction.hash,
-        },
-      );
+      const executedTransaction = await aptosClient({
+        name: network?.name as unknown as Network,
+        url: network?.url,
+        chainId: network?.chainId ?? 0,
+      }).waitForTransaction({
+        transactionHash: commitedTransaction.hash,
+      });
       // Check maxGasAmount is respected by the current connected Wallet
       if ((executedTransaction as any).max_gas_amount == MaxGasAMount) {
         toast({

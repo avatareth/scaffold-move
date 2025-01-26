@@ -2,17 +2,30 @@
 
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useAptosWallet } from "@razorlabs/wallet-kit";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { WalletDialog } from "./WalletDialog";
 import { ConnectedWalletButton } from "./ConnectedWalletButton";
 import { Button } from "../ui/button";
+import {
+  AccountInfo,
+  AptoGetsAccountOutput,
+} from "@aptos-labs/wallet-standard";
 
 export function WalletButton() {
   const [showDialog, setShowDialog] = useState(false);
-  const { connected, account } = useAptosWallet();
-  console.log("account: ", account);
+  const { connected, adapter } = useAptosWallet();
+  const [accountState, setAccountState] = useState<AccountInfo | null>(null);
+  console.log("account: ", accountState);
   console.log("connected: ", connected);
-  
+  const getAccount = useCallback(async () => {
+    if (adapter) {
+      const account = await adapter.account();
+      setAccountState(account);
+    }
+  }, [adapter]);
+  useEffect(() => {
+    getAccount();
+  }, [getAccount]);
   return (
     <WalletDialog
       open={showDialog}

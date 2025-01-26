@@ -171,8 +171,9 @@ export default function Home() {
   }, [adapter]);
 
   const getBalance = useCallback(async () => {
-    if (!account?.address || !adapter || !aptos) return;
-    const balance = await doGetBalance(aptos, account.address);
+    if (!adapter || !aptos) return;
+    const account = await adapter.account();
+    const balance = await doGetBalance(aptos, account.address.toString());
     toast({
       title: "balance",
       description: balance!.toString(),
@@ -415,13 +416,13 @@ function WalletConnection({ account, network, wallet }: WalletConnectionProps) {
   ];
 
   // Debug logs
-  console.log('=== Debug Info ===');
-  console.log('Account:', JSON.stringify(account, null, 2));
-  console.log('Network:', JSON.stringify(network, null, 2));
-  console.log('Wallet:', JSON.stringify(wallet, null, 2));
+  // console.log('=== Debug Info ===');
+  // console.log('Account:', JSON.stringify(account, null, 2));
+  // console.log('Network:', JSON.stringify(network, null, 2));
+  // console.log('Wallet:', JSON.stringify(wallet, null, 2));
 
-  console.log('Processed address:', address);
-  console.log('Processed publicKey:', publicKey);
+  // console.log('Processed address:', address);
+  // console.log('Processed publicKey:', publicKey);
 
   return (
     <Card>
