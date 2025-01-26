@@ -8,19 +8,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import { useCallback } from "react";
-import { useAptosWallet } from '@razorlabs/wallet-kit';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAptosWallet } from "@razorlabs/wallet-kit";
+import { AccountInfo } from "@aptos-labs/wallet-standard";
 
 export function ConnectedWalletButton() {
-  const { account, disconnect } = useAptosWallet();
-
+  const { adapter, disconnect } = useAptosWallet();
+  const [account, setAccount] = useState<AccountInfo | null>(null);
   const handleDisconnect = useCallback(async () => {
     try {
       await disconnect();
     } catch (error) {
       console.error("Failed to disconnect:", error);
     }
-  }, [disconnect]);
+  }, [adapter]);
+  
+  const getAccount = useCallback(async () => {
+    if (!adapter) return;
+    const account = await adapter.account();
+    setAccount(account);
+  }, [adapter]);
+
+  useEffect(() => {
+    getAccount();
+  }, [getAccount]);
 
   const shortenAddress = (address: string) => {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
@@ -33,7 +44,7 @@ export function ConnectedWalletButton() {
           variant="outline"
           className="bg-blue-500  hover:bg-blue-500/90 text-white hover:text-white/90 border-0 font-medium px-6 py-2 h-10 shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] hover:brightness-110 w-[160px] justify-center"
         >
-          {account?.address ? shortenAddress(account.address) : "Connected"}
+          {account ? shortenAddress(account.address.toString()) : "Connected"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
