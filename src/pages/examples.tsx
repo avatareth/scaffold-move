@@ -53,7 +53,7 @@ const Examples: NextPage = () => {
         <div className="hero-content text-center">
           <div className="max-w-screen-xl">
             <h1 className="text-2xl font-bold">🏝️ Scaffold-Aptos Examples 🏝️</h1>
-            <p className="py-6"> -- See the AwEsOMe Examples of scaffold-aptos!
+            <p className="py-6"> -- See the AwEsOMe Examples of scaffold-move!
             </p>
             <div className="join mb-6">
               <div className="grid gap-5 mt-5 md:grid-cols-1 lg:grid-cols-1">

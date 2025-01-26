@@ -1,6 +1,11 @@
 import Link from "next/link";
 
-type NavItemProps = { href: string; title: string };
+interface NavItemProps {
+  href: string;
+  title: string;
+  className?: string;
+}
+
 export function NavItem({ href, title }: NavItemProps) {
   return (
     <li className="font-sans font-semibold text-base">
