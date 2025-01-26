@@ -252,8 +252,9 @@ export function SingleSigner() {
           <TransactionHash
             hash={hash}
             network={{
-              name: network?.name as unknown as NetworkName,
+              name: network?.name as unknown as Network,
               url: network?.url,
+              chainId: network?.chainId ?? 0,
             }}
           />
         ),
@@ -286,8 +287,9 @@ export function SingleSigner() {
 
     try {
       const transactionToSign = await aptosClient({
-        name: network?.name as unknown as NetworkName,
+        name: network?.name as unknown as Network,
         url: network?.url,
+        chainId: network?.chainId ?? 0,
       }).transaction.build.simple({
         sender: account.address,
         data: {

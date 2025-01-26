@@ -4,6 +4,7 @@ import {
   AccountAuthenticator,
   AnyRawTransaction,
   Ed25519Account,
+  Network,
 } from "@aptos-labs/ts-sdk";
 import { NetworkName, useWallet } from "@aptos-labs/wallet-adapter-react";
 import { useState, useEffect } from "react";
@@ -68,8 +69,9 @@ export function MultiAgent() {
     const secondarySigner = Account.generate();
 
     await aptosClient({
-      name: network.name as unknown as NetworkName,
+      name: network.name as unknown as Network,
       url: network.url,
+      chainId: network.chainId ?? 0,
     }).fundAccount({
       accountAddress: secondarySigner.accountAddress.toString(),
       amount: 100_000_000,
@@ -78,8 +80,9 @@ export function MultiAgent() {
     setSecondarySignerAccount(secondarySigner);
 
     const transactionToSign = await aptosClient({
-      name: network.name as unknown as NetworkName,
+      name: network.name as unknown as Network,
       url: network.url,
+      chainId: network.chainId ?? 0,
     }).transaction.build.multiAgent({
       sender: account.address,
       secondarySignerAddresses: [secondarySigner.accountAddress],
@@ -138,8 +141,9 @@ export function MultiAgent() {
           <TransactionHash
             hash={response.hash}
             network={{
-              name: network?.name as unknown as NetworkName,
+              name: network?.name as unknown as Network,
               url: network?.url,
+              chainId: network?.chainId ?? 0,
             }}
           />
         ),
