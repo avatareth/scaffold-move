@@ -31,3 +31,8 @@ This project is referenced from:
 7. A Quick way to deploy: `yarn vercel --prod`
 
 This project is maintained by [NonceGeek DAO](https://noncegeek.com/#/).
+
+## Articles(CN/EN)
+
+* [Scaffold-Move: to Buidl Movement dApp Quickly](https://medium.com/@root_mud/scaffold-move-uidl-movement-dapp-quickly-69d2a69a3465)
+* [Scaffold Move 使用指南 | Move dApp 极速入门（贰拾捌）](https://mp.weixin.qq.com/s/DQ7cLOVPbo7KBS0X60FuuQ)
