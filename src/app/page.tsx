@@ -88,6 +88,15 @@ if (isTelegramMiniApp) {
   initTelegram();
 }
 
+async function doGetBalanceByResourceWay(aptos: Aptos, accountAddress: string) {
+  const resp = await aptos.getAccountResource({
+    accountAddress,
+    resourceType: "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>",
+  });
+  console.log("resp", resp.coin.value);
+  return resp
+}
+
 async function doGetBalance(aptos: Aptos, accountAddress: string) {
   const [balance] = await aptos.view({
     payload: {
@@ -99,21 +108,21 @@ async function doGetBalance(aptos: Aptos, accountAddress: string) {
   return balance;
 }
 
-async function buildSimpleTransaction(
-  aptos: Aptos,
-  senderAddress: string,
-  recipientAddress: string,
-  amount: number
-) {
-  return await aptos.transaction.build.simple({
-    sender: senderAddress,
-    data: {
-      function: "0x1::coin::transfer",
-      typeArguments: ["0x1::aptos_coin::AptosCoin"],
-      functionArguments: [recipientAddress, amount],
-    },
-  });
-}
+// async function buildSimpleTransaction(
+//   aptos: Aptos,
+//   senderAddress: string,
+//   recipientAddress: string,
+//   amount: number
+// ) {
+//   return await aptos.transaction.build.simple({
+//     sender: senderAddress,
+//     data: {
+//       function: "0x1::coin::transfer",
+//       typeArguments: ["0x1::aptos_coin::AptosCoin"],
+//       functionArguments: [recipientAddress, amount],
+//     },
+//   });
+// }
 
 export default function Home() {
   const { toast } = useToast();
@@ -180,12 +189,23 @@ export default function Home() {
     });
   }, [aptos, account]);
 
+  const getBalanceByResourceWay = useCallback(async () => {
+    if (!adapter || !aptos) return;
+    const account = await adapter.account();
+    const resp = await doGetBalanceByResourceWay(aptos, account.address.toString());
+    toast({
+      title: "balance by resource way",
+      description: resp!.coin.value.toString(),
+    });
+  }, [aptos, account]);
+
   // Example usage within your component:
   const handleTransaction = useCallback(async () => {
     // Docs: https://docs.nightly.app/docs/aptos/solana/connect
     // console.log("info", account, adapter, aptos);
     if (!account?.address) return;
     const network = await adapter?.network();
+    // optional: only works if the adapter supports network change.
     if (network?.chainId !== 177) {
       try {
         await adapter?.changeNetwork({ name: Network.TESTNET, chainId: 177 });
@@ -221,22 +241,6 @@ export default function Home() {
     } catch (error) {
       console.error(error);
     }
-
-    // const transaction = await buildSimpleTransaction(
-    //   aptos,
-    //   account.address,
-    //   "0x960dbc655b847cad38b6dd056913086e5e0475abc27152b81570fd302cb10c38",
-    //   100
-    // );
-
-    // console.log("transaction", transaction);
-
-    // const signedTx = await adapter.features[
-    //   "aptos:signTransaction"
-    // ].signTransaction(transaction);
-
-    // TODO: adapt with OKX and petra here.
-
     toast({
       title: userResponse.status,
       description: "This transaction has been " + userResponse.status,
@@ -253,11 +257,19 @@ export default function Home() {
       {connected && (
         <>
           <button
+            onClick={getBalanceByResourceWay}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+            // disabled={!connected || !adapter || !aptos}
+          >
+            Get Resource Example: Get Balance
+          </button>
+
+          <button
             onClick={getBalance}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             // disabled={!connected || !adapter || !aptos}
           >
-            View Example: Get Balance
+            View Func Example: Get Balance
           </button>
           <button
             onClick={handleTransaction}
