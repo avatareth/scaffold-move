@@ -24,11 +24,12 @@ This project is referenced from:
 
 1. `git clone https://github.com/rootMUD/scaffold-move.git`
 2. `cd scaffold-move`
-3. `yarn # Install the necessary front-end packages, pay attention to your local network environment`
-4. Environment configuration, some global variables are in .env.local, which will be injected into the process started by yarn by default. Attention beginners, the testnet faucet url provided by aptos official website cannot be used directly.
+3. `yarn install` # Install the necessary front-end packages, pay attention to your local network environment`
+4. Environment configuration, some global variables are in .env.local, which will be injected into the process started by yarn by default. Attention beginners, the testnet faucet url provided by aptos 
+   official website cannot be used directly.
 5. `yarn dev`
-6.`yarn build #compiled next.js application`
-7. A Quick way to deploy: `yarn vercel --prod`
+6. `yarn build` #compiled next.js application
+7. `yarn vercel --prod` # A Quick way to live deploy
 
 This project is maintained by [NonceGeek DAO](https://noncegeek.com/#/).
 
